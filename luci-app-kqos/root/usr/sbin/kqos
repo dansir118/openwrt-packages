@@ -1,0 +1,168 @@
+#!/bin/sh
+#
+# [K] 2020
+
+dev=br-lan
+SHAPER_DUR_US=1000
+
+get_mtu() {
+    local CUR_MTU=1500
+    [ -f "/sys/class/net/$1/mtu" ] && CUR_MTU=$(cat /sys/class/net/$1/mtu)
+    echo ${CUR_MTU}
+}
+
+get_min_burst() {
+    local MTU
+    local MIN_BURST
+    MTU=$1
+    MIN_BURST=$(( ${MTU} + 48 ))
+    MIN_BURST=$(( ${MIN_BURST} + 47 ))
+    MIN_BURST=$(( ${MIN_BURST} / 48 ))
+    MIN_BURST=$(( ${MIN_BURST} * 53 ))
+    echo ${MIN_BURST}
+}
+
+get_burst() {
+    local BANDWIDTH
+    local SHAPER_BURST_US
+    local MIN_BURST
+    local BURST
+    MIN_BURST=`get_min_burst $1`
+    BANDWIDTH=$2 # note bandwidth is always given in kbps
+    SHAPER_BURST_US=$3
+
+    if [ -z "${SHAPER_BURST_US}" ] ; then
+        SHAPER_BURST_US=1000
+    fi
+
+    BURST=$(( ((${SHAPER_BURST_US} * ${BANDWIDTH}) / 8000) ))
+
+    if [ ${BURST} -lt ${MIN_BURST} ] ; then
+	    BURST=${MIN_BURST}
+    fi
+
+    echo ${BURST}
+}
+
+get_htb_burst() {
+    local HTB_MTU
+    local BANDWIDTH
+    local DURATION_US
+    local BURST
+    HTB_MTU=$( get_mtu $1 )
+    BANDWIDTH=$2
+    DURATION_US=$3
+
+    if [ -z "${DURATION_US}" ] ; then
+        DURATION_US=${SHAPER_DUR_US}	# the duration of the burst in microseconds
+    fi
+
+    if [ -n "${HTB_MTU}" -a "${DURATION_US}" -gt "0" ] ; then
+        BURST=$( get_burst ${HTB_MTU} ${BANDWIDTH} ${DURATION_US} )
+    fi
+
+    if [ -z "$BURST" ]; then
+        echo ""
+    else
+        echo burst $BURST cburst $BURST
+    fi
+}
+
+get_htb_quantum() {
+    local HTB_MTU
+    local BANDWIDTH
+    local DURATION_US
+    local MIN_QUANTUM
+    local QUANTUM
+    HTB_MTU=$( get_mtu $1 )
+    BANDWIDTH=$2
+    DURATION_US=$3
+
+    if [ -z "${DURATION_US}" ] ; then
+        DURATION_US=${SHAPER_DUR_US}	# the duration of the burst in microseconds
+    fi
+
+    if [ -n "${HTB_MTU}" -a "${DURATION_US}" -gt "0" ] ; then
+        QUANTUM=$( get_burst ${HTB_MTU} ${BANDWIDTH} ${DURATION_US} )
+    fi
+
+    if [ -z "$QUANTUM" ]; then
+        MIN_QUANTUM=`get_min_burst ${HTB_MTU}`
+        echo ${MIN_QUANTUM}
+    else
+        echo ${QUANTUM}
+    fi
+}
+
+stop_qos() {
+	tc qdisc del dev $dev root 2>/dev/null
+	tc qdisc del dev $dev ingress 2>/dev/null
+	tc qdisc del dev ${dev}-ifb root 2>/dev/null
+	ip link del dev ${dev}-ifb 2>/dev/null
+}
+
+start_qos() {
+	local dl=$1
+	local up=$2
+	local quant_dl=""
+	local quant_up=""
+
+	local dl_kb=$(( ${dl} * 1024 ))
+	local up_kb=$(( ${up} * 1024 ))
+
+	quant_dl="quantum `get_htb_quantum ${dev} ${dl_kb} 0`"
+	quant_up="quantum `get_htb_quantum ${dev} ${up_kb} 0`"
+
+	tc qdisc add dev $dev root handle 1: htb
+	tc class add dev $dev parent 1: classid 1:1 htb rate ${dl}mbit ${quant_dl}
+
+	ip link add dev ${dev}-ifb name ${dev}-ifb type ifb
+	ip link set dev ${dev}-ifb up
+
+	tc qdisc add dev ${dev}-ifb root handle 1: htb
+	tc class add dev ${dev}-ifb parent 1: classid 1:1 htb rate ${up}mbit ${quant_up}
+
+	tc qdisc add dev $dev ingress
+	tc filter add dev $dev parent ffff: protocol ip u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev ${dev}-ifb
+}
+
+case "$1" in
+	"stop")
+		stop_qos
+	;;
+	"start")
+		stop_qos
+		start_qos $2 $3
+	;;
+	"add")
+		ip="$2"
+		dl="$3"
+		up="$4"
+		quant_dl=""
+		quant_up=""
+
+		dl_kb=$(( ${dl} * 1024 ))
+		up_kb=$(( ${up} * 1024 ))
+
+		quant_dl="quantum `get_htb_quantum ${dev} ${dl_kb} 0`"
+		quant_up="quantum `get_htb_quantum ${dev} ${up_kb} 0`"
+
+		cnt=$(tc class show dev $dev | wc -l)
+
+		tc class add dev $dev parent 1:1 classid 1:1$cnt htb rate ${dl}mbit ceil ${dl}mbit ${quant_dl}
+		tc filter add dev $dev parent 1:0 protocol ip u32 match ip dst $ip flowid 1:1$cnt
+
+		tc class add dev ${dev}-ifb parent 1:1 classid 1:1$cnt htb rate ${up}mbit ceil ${up}mbit ${quant_up}
+		tc filter add dev ${dev}-ifb parent 1:0 protocol ip u32 match ip src $ip flowid 1:1$cnt
+	;;
+	*)
+		echo "Usage: $0 <command> [options]"
+		echo "Commands:"
+		echo "  start dl_rate up_rate       #Total bandwidth (Mbit/s)"
+		echo "  stop"
+		echo "  add ip dl_rate up_rate      #Limiting the bandwidth of a single IP (Mbit/s)"
+		echo "Example:"
+		echo "  $0 start 30 20              # Total bandwidth: down 30Mbit/s up 20Mbit/s"
+		echo "  $0 add 192.168.22.12 10 2   # down 10Mbit/s  up 2Mbit/s"
+	;;
+esac

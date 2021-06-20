@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# [K]2020
+
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@kqos[-1]
+	add ucitrack kqos
+	set ucitrack.@kqos[-1].init=kqos
+	commit ucitrack
+EOF
+
+rm -f /tmp/luci-indexcache*
+exit 0

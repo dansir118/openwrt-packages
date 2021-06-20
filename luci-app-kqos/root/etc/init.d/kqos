@@ -1,0 +1,44 @@
+#!/bin/sh /etc/rc.common
+#
+# [K] 2020
+
+START=50
+
+parse_device() {
+	local cfg="$1" ip download upload
+
+	config_get ip "$cfg" ip
+	config_get download "$cfg" download
+	config_get upload "$cfg" upload
+
+	kqos add $ip $download $upload
+}
+
+kqos_start() {
+	kqos stop
+	sleep 2s
+	#/etc/init.d/dnsmasq restart >/dev/null
+
+	local cfg="$1" enabled download upload
+
+	config_get_bool enabled "$cfg" enabled 0
+	[ $enabled -eq 0 ] && return 0
+
+	config_get download "$cfg" download
+	config_get upload "$cfg" upload
+
+	kqos start $download $upload
+
+	config_foreach parse_device device
+}
+
+start() {
+	sleep 6s
+	[ -f "/usr/sbin/kqos" ] && chmod +x /usr/sbin/kqos
+	config_load kqos
+	config_foreach kqos_start kqos
+}
+
+stop() {
+	kqos stop
+}

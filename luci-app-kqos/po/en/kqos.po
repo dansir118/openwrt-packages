@@ -1,0 +1,48 @@
+msgstr ""
+msgid ""
+"Project-Id-Version: LuCi en_US Translation\n"
+"Report-msgstr-Bugs-To: \n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "QoS"
+msgstr "QoS"
+
+msgid "网速控制"
+msgstr "KQoS"
+
+msgid "网络限速控制"
+msgstr "Network speed control"
+
+msgid "简单的QOS服务及内网客户端的联网限速"
+msgstr "A simple Qos and LAN speed limiter"
+
+msgid "总下载带宽 (M)"
+msgstr "Total download speed (M)"
+
+msgid "总上传带宽 (M)"
+msgstr "Total upload speed (M)"
+
+msgid "启用"
+msgstr "Enable"
+
+msgid "总带宽"
+msgstr "Total bandwidth"
+
+msgid "IP 限速"
+msgstr "Speed limit based on IP address"
+
+msgid "IP 地址"
+msgstr "IP address"
+
+msgid "下载带宽 (M)"
+msgstr "Download speed (M)"
+
+msgid "上传带宽 (M)"
+msgstr "Upload speed (M)"
+
+msgid "备注"
+msgstr "Comment"

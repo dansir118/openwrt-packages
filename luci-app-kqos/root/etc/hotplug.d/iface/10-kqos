@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# [K] 2020
+
+[ "$ACTION" = "ifup" ] || exit 0
+[ "$INTERFACE" = "lan" ] || exit 0
+
+[ -f "/etc/config/kqos" ] || exit 0
+[ -f "/etc/init.d/kqos" ] || exit 0
+
+enabled=`uci get kqos.@kqos[0].enabled`
+
+[ "$enabled" == "1" ] && /etc/init.d/kqos restart

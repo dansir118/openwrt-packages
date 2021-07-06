@@ -5,5 +5,5 @@ function index()
 		return
 	end
 
-	entry({"admin", "network", "kqos"}, cbi("kqos"), _("网速控制"), 61)
+	entry({"admin", "control", "kqos"}, cbi("kqos"), _("网速控制"), 61)
 end

@@ -11,7 +11,7 @@
 | luci-app-control-webrestriction | [Lienol](https://github.com/Lienol)/**[openwrt-package](https://github.com/Lienol/openwrt-package/tree/main/luci-app-control-webrestriction)** |              mac过滤               |
 |     luci-app-control-weburl     | [Lienol](https://github.com/Lienol)/**[openwrt-package](https://github.com/Lienol/openwrt-package/tree/main/luci-app-control-weburl)** |              网址过滤              |
 |        luci-app-cpulimit        | [immortalwrt](https://github.com/immortalwrt)/**[luci](https://github.com/immortalwrt/luci/tree/openwrt-18.06-k5.4/applications/luci-app-cpulimit)** |           CPU使用率限制            |
-|       luci-app-dnsfilter        | [garypang13](https://github.com/garypang13)/**[luci-app-dnsfilter](https://github.com/garypang13/luci-app-dnsfilter)** |         基于DNS的广告过滤          |
+|      luci-app-adblock-plus      | [small-5](https://github.com/small-5)/**[luci-app-adblock-plus](https://github.com/small-5/luci-app-adblock-plus)** |       基于Dnsmasq的广告过滤        |
 |      luci-app-filebrowser       | [Lienol](https://github.com/Lienol)/**[openwrt-package](https://github.com/Lienol/openwrt-package/tree/main/luci-app-filebrowser)** |  轻量级文件服务器（File Browser）  |
 |      luci-app-ipsec-server      | [Lienol](https://github.com/Lienol)/**[openwrt-package](https://github.com/Lienol/openwrt-package/tree/main/luci-app-ipsec-server)** | IPSec VPN服务器（支持多用户管理）  |
 |        luci-app-kcpufreq        | [kongfl888](https://github.com/kongfl888)/**[luci-app-kcpufreq](https://github.com/kongfl888/luci-app-kcpufreq)** |           CPU性能调节器            |

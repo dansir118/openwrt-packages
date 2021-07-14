@@ -23,4 +23,5 @@
 |        luci-app-taghost         | [ryohuang](https://github.com/ryohuang)/**[luci-apps](https://github.com/ryohuang/luci-apps/tree/master/application/luci-app-taghost)** |   给设备绑定tag并指定DHCP Option   |
 |      luci-app-timecontrol       | [Lienol](https://github.com/Lienol)/**[openwrt-package](https://github.com/Lienol/openwrt-package/tree/main/luci-app-timecontrol)** |            上网时间控制            |
 |      luci-app-usb3disable       | [rufengsuixing](https://github.com/rufengsuixing)/**[luci-app-usb3disable](https://github.com/rufengsuixing/luci-app-usb3disable)** |            USB禁用启用             |
+|       luci-app-iptvhelper       | [riverscn](https://github.com/riverscn)/**[openwrt-iptvhelper](https://github.com/riverscn/openwrt-iptvhelper)** |          帮助轻松配置IPTV          |
 

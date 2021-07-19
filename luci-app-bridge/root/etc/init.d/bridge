@@ -1,0 +1,117 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+
+run_bridge() {
+	config_get masq $1 masq
+	config_get dhcp $1 dhcp
+	config_get ipaddr $1 ipaddr
+	config_get enabled $1 enabled
+	config_get gateway $1 gateway
+	config_get netmask $1 netmask
+	config_get network $1 network
+	config_get firewall $1 firewall
+	config_get fullcone $1 fullcone
+	config_get syn_flood $1 syn_flood
+
+	if [ "$enabled" -eq "1" ]; then
+		# egrep "firewall" /etc/config/firewall_backup|cut -d. -f2|cut -d= -f1
+		#备份配置
+		if [ ! -s "$dhcp_backup" ] && [ $dhcp -eq 0 ]; then
+			echo -e "delete dhcp.@lan[-1]\ndelete dhcp.lan" >$dhcp_backup
+			uci show dhcp.lan | sed 's/^/set &/g' >>$dhcp_backup
+			echo "commit dhcp" >>$dhcp_backup
+		fi
+
+		if [ ! -s "$network_backup" ]; then
+			echo -e "delete network.@lan[-1]\ndelete network.lan" >$network_backup
+			uci show network.lan | sed 's/^/set &/g' >>$network_backup
+			echo "commit network" >>$network_backup
+		fi
+
+		if [ ! -s "$firewall_backup" ] && [ $firewall ]; then
+			[ $firewall ] && uci show firewall.@zone[0] | sed 's/^/set &/g' >>$firewall_backup
+			[ $firewall ] && uci show firewall.@defaults[0] | sed 's/^/set &/g' >>$firewall_backup
+			echo "commit firewall" >>$firewall_backup
+		fi
+
+		#模拟输入
+		if [ "$network" = "0" ] || [ "$network" = "" ]; then
+			eth=$(ls /sys/class/net | grep "eth" | tr '\n' ' ' | sed 's/[ ]*$//g')
+		else
+			eth=$(ETH $network | tr '\n' ' ' | sed 's/[ ]*$//g')
+		fi
+
+		#写入network网络接口
+		uci set network.lan.ipaddr=$ipaddr
+		uci set network.lan.netmask=$netmask
+		uci set network.lan.gateway=$gateway
+		uci set network.lan.dns=$gateway
+		uci set network.lan.ifname="$eth"
+		uci commit network
+
+		#写入dhcp
+		if [ $dhcp -eq 0 ]; then
+			uci set dhcp.lan.ignore=1
+			uci -q delete dhcp.lan.start
+			uci -q delete dhcp.lan.limit
+			uci -q delete dhcp.lan.leasetime
+			uci set dhcp.lan.force='0'
+			uci commit dhcp
+		else
+			if [ -s "$dhcp_backup" ]; then
+				while read line; do uci -q batch $line; done < $dhcp_backup
+				rm $dhcp_backup
+			fi
+			uci set dhcp.lan.force='1'
+			uci commit dhcp
+		fi
+
+		#写入firewall防火墙
+		if [ $firewall ]; then
+			[ -z "$(grep "iptables -t nat -I POSTROUTING -j MASQUERADE" $firewall_user)" ] && echo 'iptables -t nat -I POSTROUTING -j MASQUERADE' >>$firewall_user
+			[ $masq ] && uci set firewall.@zone[0].masq='1' || uci set firewall.@zone[0].masq='0'
+			[ $fullcone ] && uci set firewall.@defaults[0].fullcone='0' || uci set firewall.@defaults[0].fullcone='1'
+			[ $syn_flood ] && uci set firewall.@defaults[0].syn_flood='0' || uci set firewall.@defaults[0].syn_flood='1'
+		else
+			sed -i '/iptables -t nat -I POSTROUTING -j MASQUERADE/d' $firewall_user
+			while read line; do uci -q batch $line; done < $firewall_backup
+			rm $firewall_backup
+		fi
+		uci set firewall.@zone[0].name=bridge
+		uci commit firewall
+	else
+		#恢复配置&删除备份
+		uci set dhcp.lan.force='0'
+		uci set firewall.@zone[0].masq='0'
+		uci set firewall.@zone[0].name=lan
+		sed -i '/iptables -t nat -I POSTROUTING -j MASQUERADE/d' $firewall_user
+		for p in ls /etc/config/*_backup; do
+			while read line; do uci -q batch $line; done < $p
+			rm $p
+		done
+	fi
+	#重启网络与防火墙
+	/etc/init.d/network restart 2>/dev/null &
+	/etc/init.d/firewall restart 2>/dev/null &
+}
+
+ETH() {
+	eth=0
+	while [ $eth -le $(expr "$1" - 1) ]; do
+		eth=$(expr $eth + 1)
+		a=$(expr $eth - 1)
+		echo "eth$a"
+	done
+}
+
+start() {
+	firewall_user="/etc/firewall.user"
+	dhcp_backup="/etc/config/dhcp_backup"
+	network_backup="/etc/config/network_backup"
+	firewall_backup="/etc/config/firewall_backup"
+	if [ "$(uci get bridge.bridge.enabled 2>/dev/null)" -eq 1 -o -s $backup ]; then
+		config_load bridge
+		config_foreach run_bridge bridge
+	fi
+}

@@ -1,0 +1,20 @@
+msgid "axel is a good high-speed download tool that supports HTTP, HTTPS, FTP and FTPS protocols. Supports multi-threaded downloads, resumable uploads, and can download the same file from multiple addresses or multiple connections from one address. It is suitable for multi-threaded download to improve the download speed when the internet speed is not strong."
+msgstr "axel 是一个支持HTTP，HTTPS，FTP和FTPS协议不错的高速下载工具。支持多线程下载、断点续传，且可以从多个地址或者从一个地址的多个连接来下载同一个文件。适合网速不给力时多线程下载提高下载速度。"
+
+msgid "Axel is running"
+msgstr "Axel 正在运行"
+
+msgid "Axel is not running"
+msgstr "Axel 没有运行"
+
+msgid "Operating status :"
+msgstr "运行状态 : "
+
+msgid "The path where the downloaded file is saved. For example: <code>/mnt/sda1/download</code>"
+msgstr "下载文件的保存路径。例如：<code>/mnt/sda1/download</code>"
+
+msgid "save route"
+msgstr "保存路径"
+
+msgid "Current Axel version: %s"
+msgstr "当前Axel的版本: %s"

@@ -1,0 +1,11 @@
+#!/bin/sh
+
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@axel[-1]
+	add ucitrack axel
+	set ucitrack.@axel[-1].init=axel
+	commit ucitrack
+EOF
+
+rm -f /tmp/luci-*
+exit 0

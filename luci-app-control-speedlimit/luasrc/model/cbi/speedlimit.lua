@@ -11,7 +11,7 @@ else
 	state_msg = "<b><font color=\"red\">" .. translate("未运行") .. "</font></b>"
 end
 
-m = Map("speedlimit", translate("速度限制"))
+m = Map("speedlimit", translate("网速限制"))
 m.description = translate("可以通过MAC，IP，IP段，IP范围限制用户上传/下载的网速。<br>速度单位是（<b><font color=\"green\">MB/秒</font></b>），速度值 0 时为无限制。").. button .. "<br/><br/>" .. translate("运行状态 ：") .. state_msg .. "<br />"
 
 s = m:section(TypedSection, "usrlimit")

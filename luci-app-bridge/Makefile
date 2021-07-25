@@ -6,6 +6,8 @@
 
 include $(TOPDIR)/rules.mk
 
+PKG_NAME:=luci-app-bridge
+PKG_VERSION:=2.0
 LUCI_TITLE:=Luci for support bridge
 LUCI_DEPENDS:=+ip-bridge +kmod-nft-bridge +kmod-br-netfilter
 

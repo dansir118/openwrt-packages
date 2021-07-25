@@ -4,9 +4,9 @@ XHR.poll(3, '<%=url([[admin]], [[network]], [[bridge]], [[status]])%>', null,
 		var tb = document.getElementById('bridge_status');
 		if (data && tb) {
 			if (data.running) {
-				tb.innerHTML = '<em><b><font color=green><%:网络已修改%></font>';
+				tb.innerHTML = '<em><b><font color=green><%:已运行：网络已修改%></font>';
 			} else {
-				tb.innerHTML = '<em><b><font color=red><%:网络未修改%></font>';
+				tb.innerHTML = '<em><b><font color=red><%:未运行：网络未修改%></font>';
 			}
 		}
 	}

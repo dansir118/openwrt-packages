@@ -17,7 +17,6 @@ o.placeholder = 'WORKGROUP'
 o=s:taboption("general", Value, "description", translate("Description"))
 o.placeholder = 'Ksmbd on OpenWrt'
 
-o = s.taboption('general',Flag, 'allow_legacy_protocols', translate('Allow legacy (insecure) protocols/authentication.'))
 h = s:taboption("general", Flag, "homes", translate("Share home-directories"),
         translate("Allow system users to reach their home directories via " ..
                 "network shares"))

@@ -6,8 +6,12 @@ function index()
 	if not nixio.fs.access("/etc/config/ksmbd") then
 		return
 	end
+	
+	entry({"admin","nas"},firstchild(),"NAS",44).dependent=false
 
-    entry({"admin", "control", "ksmbd"}, cbi("ksmbd"), _("网络共享"), 90).dependent = true
+	local page
 
+	page = entry({"admin", "nas", "ksmbd"}, cbi("ksmbd"), _("Network Shares (KSMBD)"))
+	page.dependent = true
 end
 

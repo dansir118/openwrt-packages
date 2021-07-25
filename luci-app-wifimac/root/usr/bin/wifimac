@@ -1,0 +1,114 @@
+#!/usr/bin/lua
+
+--local fs = require "nixio.fs"
+require("luci.sys")
+local sys   = require "luci.sys"
+local uci = luci.model.uci.cursor()
+--local ip   = require "luci.ip"
+local util = require "luci.util"
+--local cjson = require "cjson.safe"
+
+print("============wifimac============")
+local wifi_mac2 = uci:get("wifimac","wifimac","mac2") or ''
+local wifi_mac5 = uci:get("wifimac","wifimac","mac5") or ''
+
+--print("wifi mac2:" .. wifi_mac2)
+--print("wifi mac5:" .. wifi_mac5)
+
+function StringToHex(str)
+    Strlen = string.len(str)
+    Hex = 0x0
+    for i = 1, Strlen do
+        temp = string.byte(str,i)
+        if ((temp >= 48) and (temp <= 57)) then
+            temp = temp - 48
+        elseif ((temp >= 97) and (temp <= 102)) then
+            temp = temp - 87
+        elseif ((temp >= 65) and (temp <= 70)) then
+            temp = temp - 55
+        end
+        Hex =  Hex + temp*(16^(Strlen-i))
+    end
+    return (Hex)
+end
+
+function add_mac(macaddr)
+    if macaddr == '' then
+	return ''
+    end
+    local mac = util.split(macaddr, ":")
+    --print("add_mac:" .. cjson.encode(mac))
+    mac[1] = StringToHex(mac[1]) + 2
+    mac[2] = StringToHex(mac[2])
+    mac[3] = StringToHex(mac[3])
+    mac[4] = StringToHex(mac[4])
+    mac[5] = StringToHex(mac[5])
+    mac[6] = StringToHex(mac[6])
+  --[[ print(mac[1]) 
+   print(mac[2]) 
+   print(mac[3]) 
+   print(mac[4]) 
+   print(mac[5]) 
+   print(mac[6]) --]]
+   local mac_str = string.format("%02x:%02x:%02x:%02x:%02x:%02x",mac[1],mac[2],mac[3],mac[4],mac[5],mac[6])
+   --print("add_mac:" .. mac_str )
+   return mac_str
+end
+
+function rewrite_mac2(macaddr)
+	local mac=macaddr
+
+        uci:load("wireless")
+        uci:foreach("wireless","wifi-iface",
+                function(s)
+                    if s.device == 'radio0' then
+			if mac == '' then
+				uci:delete("wireless", s[".name"], "macaddr")
+			else
+                            if s.mode == 'ap' then
+				print("wifi mac2 ap: " .. mac)
+				uci:set("wireless", s[".name"], "macaddr", mac)
+                            elseif s.mode == 'sta' then
+				mac = add_mac(mac)
+				print("wifi mac2 sta: " .. mac)
+				uci:set("wireless", s[".name"], "macaddr", mac)
+                            end
+			end
+                    end
+
+        end)
+        uci:commit("wireless")
+        uci:unload("wireless")
+end
+
+function rewrite_mac5(macaddr)
+	local mac=macaddr
+
+        uci:load("wireless")
+        uci:foreach("wireless","wifi-iface",
+                function(s)
+                    if s.device == 'radio1' then
+			if mac == '' then
+				uci:delete("wireless", s[".name"], "macaddr")
+			else
+                            if s.mode == 'ap' then
+				print("wifi mac5 ap: " .. mac)
+				--s.macaddr = mac
+				uci:set("wireless", s[".name"], "macaddr", mac)
+                            elseif s.mode == 'sta' then
+				mac = add_mac(mac)
+				print("wifi mac5 sta: " .. mac)
+				--s.macaddr = mac
+				uci:set("wireless", s[".name"], "macaddr", mac)
+                            end
+			end
+                    end
+
+        end)
+        uci:commit("wireless")
+        uci:unload("wireless")
+end
+
+rewrite_mac2(wifi_mac2)
+rewrite_mac5(wifi_mac5)
+io.popen("/sbin/wifi")

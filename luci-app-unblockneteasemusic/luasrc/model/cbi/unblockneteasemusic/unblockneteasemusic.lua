@@ -1,5 +1,5 @@
 mp = Map("unblockneteasemusic", translate("解除网易云音乐播放限制"))
-mp.description = translate("原理：采用 [QQ/百度/酷狗/酷我/咪咕/JOOX] 等音源，替换网易云音乐 无版权/收费 歌曲链接<br/>具体使用方法参见：https://github.com/immortalwrt/luci-app-unblockneteasemusic")
+mp.description = translate("原理：采用 [Bilibili/QQ/酷狗/酷我/咪咕/JOOX/Youtube] 等音源，替换网易云音乐 无版权/收费 歌曲链接<br/>具体使用方法参见：https://github.com/UnblockNeteaseMusic/luci-app-unblockneteasemusic")
 
 mp:section(SimpleSection).template = "unblockneteasemusic/unblockneteasemusic_status"
 
@@ -14,15 +14,15 @@ enable.rmempty = false
 
 music_source = s:option(Value, "music_source", translate("音源接口"))
 music_source:value("default", translate("默认"))
-music_source:value("netease", translate("网易云音乐"))
-music_source:value("qq", translate("QQ音乐"))
+music_source:value("bilibili", translate("Bilibili音乐"))
+music_source:value("joox", translate("JOOX音乐"))
+music_source:value("kugou", translate("酷狗音乐"))
 music_source:value("kuwo", translate("酷我音乐"))
 music_source:value("migu", translate("咪咕音乐"))
-music_source:value("kugou", translate("酷狗音乐"))
-music_source:value("baidu", translate("百度音乐"))
-music_source:value("joox", translate("JOOX音乐"))
+music_source:value("pyncmd", translate("网易云音乐（pyncmd）"))
+music_source:value("qq", translate("QQ音乐"))
 music_source:value("youtube", translate("Youtube音乐"))
-music_source:value("bilibili", translate("Bilibili音乐"))
+music_source:value("ytdownload", translate("Youtube音乐（ytdownload）"))
 music_source.description = translate("自定义模式下，多个音源请用空格隔开")
 music_source.default = "default"
 music_source.rmempty = false
@@ -47,6 +47,12 @@ use_custom_cookie.description = translate("使用自定义 Cookie 请求音源�
 use_custom_cookie.default = 0
 use_custom_cookie.rmempty = false
 
+joox_cookie = s:option(Value, "joox_cookie", translate("JOOX Cookie"))
+joox_cookie.description = translate("在 joox.com 获取，需要wmid和session_key值")
+joox_cookie.placeholder = "wmid=; session_key="
+joox_cookie.datatype = "string"
+joox_cookie:depends("use_custom_cookie", 1)
+
 migu_cookie = s:option(Value, "migu_cookie", translate("Migu Cookie"))
 migu_cookie.description = translate("通过抓包手机客户端请求获取，需要aversionid值")
 migu_cookie.datatype = "string"
@@ -63,6 +69,11 @@ youtube_key.description = translate("API Key申请地址：https://developers.go
 youtube_key.datatype = "string"
 youtube_key:depends("use_custom_cookie", 1)
 
+local_vip = s:option(Value, "local_vip", translate("启用本地 VIP"))
+local_vip.description = translate("启用后，可以使用去广告、个性换肤、鲸云音效等本地功能")
+local_vip.default = 0
+local_vip.rmempty = false
+
 auto_update = s:option(Flag, "auto_update", translate("启用自动更新"))
 auto_update.description = translate("启用后，每天将定时自动检查最新版本并更新")
 auto_update.default = 0
@@ -76,12 +87,7 @@ update_time.default = "3"
 update_time.description = translate("设定每天自动检查更新时间")
 update_time:depends("auto_update", 1)
 
-daemon_enable = s:option(Flag, "daemon_enable", translate("启用进程守护"))
-daemon_enable.description = translate("开启后，附属程序会自动检测主程序运行状态，在主程序退出时自动重启")
-daemon_enable.default = 0
-daemon_enable.rmempty = false
-
-download_cert = s:option(Button,"certificate",translate("HTTPS 证书"))
+download_cert = s:option(Button,"certificate", translate("HTTPS 证书"))
 download_cert.inputtitle = translate("下载 CA 根证书")
 download_cert.description = translate("Linux/iOS/MacOSX在信任根证书后方可正常使用")
 download_cert.inputstyle = "reload"
@@ -182,11 +188,11 @@ self_issue_cert_key.placeholder = "/usr/share/unblockneteasemusic/core/server.ke
 self_issue_cert_key.datatype = "file"
 self_issue_cert_key:depends("advanced_mode", 1)
 
-acl_rule = mp:section(TypedSection,"acl_rule",translate("例外客户端规则"), translate("可以为局域网客户端分别设置不同的例外模式，默认无需设置"))
-acl_rule.template="cbi/tblsection"
-acl_rule.sortable=true
-acl_rule.anonymous=true
-acl_rule.addremove=true
+acl_rule = mp:section(TypedSection, "acl_rule", translate("例外客户端规则"), translate("可以为局域网客户端分别设置不同的例外模式，默认无需设置"))
+acl_rule.template = "cbi/tblsection"
+acl_rule.sortable = true
+acl_rule.anonymous = true
+acl_rule.addremove = true
 
 acl_ip_addr=acl_rule:option(Value, "ip_addr", translate("IP 地址"))
 acl_ip_addr.width = "40%"

@@ -1,6 +1,5 @@
--- This is a free software, use it under GNU General Public License v3.0.
--- Created By ImmortalWrt
--- https://github.com/immortalwrt
+-- SPDX-License-Identifer: GPL-3.0-only
+-- Copyright (C) 2019-2021 Tianling Shen <cnsztl@immortalwrt.org>
 
 module("luci.controller.unblockneteasemusic", package.seeall)
 
@@ -10,27 +9,28 @@ function index()
 	end
 
 	local page
-	page = entry({"admin", "services", "unblockneteasemusic"},firstchild(), _("解除网易云音乐播放限制"), 50)
+	page = entry({"admin", "services", "unblockneteasemusic"}, firstchild(), _("解除网易云音乐播放限制"), 50)
 	page.dependent = false
 	page.acl_depends = { "luci-app-unblockneteasemusic" }
 
-	entry({"admin", "services", "unblockneteasemusic", "general"},cbi("unblockneteasemusic/unblockneteasemusic"), _("基本设定"), 1)
-	entry({"admin", "services", "unblockneteasemusic", "upgrade"},form("unblockneteasemusic/unblockneteasemusic_upgrade"), _("更新组件"), 2).leaf = true
-	entry({"admin", "services", "unblockneteasemusic", "log"},form("unblockneteasemusic/unblockneteasemusic_log"), _("日志"), 3)
+	entry({"admin", "services", "unblockneteasemusic", "general"}, cbi("unblockneteasemusic/unblockneteasemusic"), _("基本设定"), 1)
+	entry({"admin", "services", "unblockneteasemusic", "upgrade"}, form("unblockneteasemusic/unblockneteasemusic_upgrade"), _("更新组件"), 2).leaf = true
+	entry({"admin", "services", "unblockneteasemusic", "log"}, form("unblockneteasemusic/unblockneteasemusic_log"), _("日志"), 3)
 
-	entry({"admin", "services", "unblockneteasemusic", "status"},call("act_status")).leaf=true
-	entry({"admin", "services", "unblockneteasemusic", "update_core"},call("act_update_core"))
+	entry({"admin", "services", "unblockneteasemusic", "status"}, call("act_status")).leaf = true
+	entry({"admin", "services", "unblockneteasemusic", "update_core"}, call("act_update_core"))
+	entry({"admin", "services", "unblockneteasemusic", "remove_core"}, call("act_remove_core"))
 end
 
 function act_status()
-	local e={}
-	e.running=luci.sys.call("ps |grep unblockneteasemusic |grep app.js |grep -v grep >/dev/null")==0
+	local e = {}
+	e.running = luci.sys.call("ps |grep unblockneteasemusic |grep app.js |grep -v grep >/dev/null") == 0
 	luci.http.prepare_content("application/json")
 	luci.http.write_json(e)
 end
 
 function update_core()
-	core_cloud_ver=luci.sys.exec("uclient-fetch -q -O- 'https://api.github.com/repos/1715173329/UnblockNeteaseMusic/commits/enhanced' | jsonfilter -e '@.sha'")
+	core_cloud_ver=luci.sys.exec("uclient-fetch -q -O- 'https://api.github.com/repos/UnblockNeteaseMusic/server/commits/enhanced' | jsonfilter -e '@.sha'")
 	core_cloud_ver_mini=string.sub(core_cloud_ver, 1, 7)
 	if not core_cloud_ver or not core_cloud_ver_mini then
 		return "1"
@@ -56,4 +56,11 @@ function act_update_core()
 	luci.http.write_json({
 		ret = update_core();
 	})
+end
+
+function act_remove_core()
+	local ret = {}
+	ret.ret = luci.sys.call("cd /usr/share/unblockneteasemusic && rm -rf core && rm -f core_local_ver") == 0
+	luci.http.prepare_content("application/json")
+	luci.http.write_json(ret)
 end
